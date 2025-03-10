@@ -3,19 +3,46 @@ using Backend_RC.Repositories;
 using StackExchange.Redis;
 
 namespace Backend_RC.Services;
-
+public interface IVCardService
+{
+    /// <summary>
+    /// Генерирует случайный 6-значный пин-код.
+    /// </summary>
+    /// <returns></returns>
+    string GeneratePinCode();
+    /// <summary>
+    /// Сохраняет пин-код в Redis для указанного email
+    /// </summary>
+    /// <param name="email"></param>
+    /// <param name="pinCode"></param>
+    /// <returns></returns>
+    Task SavePinToRedis(string email, string pinCode);
+    /// <summary>
+    /// Валидирует пин-код, полученный из Redis
+    /// </summary>
+    /// <param name="email"></param>
+    /// <param name="pinCode"></param>
+    /// <returns></returns>
+    Task<bool> ValidatePinFromRedis(string email, string pinCode);
+    /// <summary>
+    /// Создает виртуальную карту для пользователя и созраняет её в БД.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    Task<VCardModel> CreateVCardForUser(User user);
+}
 public class VCardService : IVCardService
 {
     private readonly IDatabase _cache;
-    private readonly VCardRepository _vCardRepository;
-    private readonly UserRepository _userRepository;
+    private readonly IVCardRepository _vCardRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<VCardService> _logger;
-    private readonly CardNumberGenerator _numberGenerator;
+    private readonly ICardNumberGenerator _numberGenerator;
 
     private const string RedisKeyPrefix = "VCardPin:";
     private readonly TimeSpan _pinExpiry = TimeSpan.FromMinutes(5);
 
-    public VCardService(IConnectionMultiplexer redis, VCardRepository vCardRepository, UserRepository userRepository, ILogger<VCardService> logger, CardNumberGenerator numberGenerator)
+    public VCardService(IConnectionMultiplexer redis, IVCardRepository vCardRepository, IUserRepository userRepository, ILogger<VCardService> logger, ICardNumberGenerator numberGenerator)
     {
         _cache = redis.GetDatabase();
         _vCardRepository = vCardRepository;

@@ -6,21 +6,22 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Backend_RC.Controllers;
-[Route("api/[controller]")]
+[Route("api/VCard")]
 [Authorize]
 [ApiController]
 public class VCardController : ControllerBase
 {
     private readonly IEmailService _emailService;
-    private readonly VCardService _vCardService;
-    private readonly UserRepository _userRepository;
+    private readonly IVCardService _vCardService;
+    private readonly IUserRepository _userRepository;
     private readonly IDatabase _redisDatabase;
 
     public VCardController(IEmailService emailService, 
-        VCardService vCardService, 
-        UserRepository userRepository,
+        IVCardService vCardService, 
+        IUserRepository userRepository,
         IConnectionMultiplexer redis)
     {
         _emailService = emailService;
@@ -31,6 +32,7 @@ public class VCardController : ControllerBase
 
     /// <summary>
     /// Запрос на выпуск вритуальной карты
+    /// Отправляет пин-код на email пользователя
     /// </summary>
     /// <returns>Отправка пинкода</returns>
     [HttpPost("request")]
@@ -43,7 +45,7 @@ public class VCardController : ControllerBase
         
         var user = await _userRepository.GetUserByIdAsync(userId);
         if (user == null)
-            return NotFound();
+            return NotFound("Пользователь не найден");
 
         if (user.VirtualCard != null || user.IndicatedCard != null)
             return Conflict("К пользователю уже привязана карта.");
@@ -55,29 +57,30 @@ public class VCardController : ControllerBase
 
         return Ok("Пин-код отправлен на email.");
     }
+
     /// <summary>
-    /// Подтверждение пин-кода и выпуск карты
+    /// Подтверждение пин-кода и выпуск виртуальной карты.
+    /// Для подтверждения используется только пин-код, email не требуется.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="requestDto">Объект с пин-кодом</param>
+    /// <returns>Информация о выпущенной виртуальной карте</returns>
+    
     [HttpPost("confirm")]
-    public async Task<IActionResult> ConfirmVCard([FromBody] VCardRequestDto requestDto)
+    public async Task<IActionResult> ConfirmVCard([FromBody] string pinCode)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
         if (string.IsNullOrEmpty(userId))
             return Unauthorized("Пользователь не авторизован.");
 
         var user = await _userRepository.GetUserByIdAsync(userId);
-        if (user == null || user.Email != requestDto.Email)
+        if (user == null)
             return NotFound("Пользователь не найден");
 
-        bool isValidPin = await _vCardService.ValidatePinFromRedis(user.Email, requestDto.PinCode);
-
+        bool isValidPin = await _vCardService.ValidatePinFromRedis(user.Email, pinCode);
         if (!isValidPin)
             return BadRequest("Неверный пин-код");
 
         var vCard = await _vCardService.CreateVCardForUser(user);
-
         return Ok(new VCardResponseDto
         {
             CardNumber = vCard.CardNumber,
@@ -85,6 +88,7 @@ public class VCardController : ControllerBase
             CreatedAt = vCard.CreatedAt
         });
     }
+
     /// <summary>
     /// Получение информации о виртуальной карте
     /// </summary>
@@ -92,6 +96,19 @@ public class VCardController : ControllerBase
     [HttpGet("info")]
     public async Task<IActionResult> Info()
     {
-        return Ok();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized("Пользователь не авторизован.");
+
+        var user = await _userRepository.GetUserByIdAsync(userId);
+        if (user == null)
+            return NotFound("Пользователь не найден");
+
+        return Ok(new
+        {
+            CardNumber = user.VirtualCard.CardNumber,
+            IsConfirmed = user.VirtualCard.isConfirmed,
+            CreatedAt = user.VirtualCard.CreatedAt
+        });
     }
 }

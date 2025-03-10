@@ -13,14 +13,14 @@ namespace Backend_RC.Controllers;
 [ApiController]
 public class IndicatedCardController : ControllerBase
 {
-    private readonly IndicatedCardService _indicatedCardService;
+    private readonly IIndicatedCardService _indicatedCardService;
     private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
     private readonly IDatabase _redis;
     private readonly ILogger<IndicatedCardController> _logger;
 
     public IndicatedCardController(
-        IndicatedCardService indicatedCardService,
+        IIndicatedCardService indicatedCardService,
         IEmailService emailService,
         IUserRepository userRepository,
         IConnectionMultiplexer redis,

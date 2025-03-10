@@ -9,6 +9,9 @@ using Backend_RC.Services;
 using StackExchange.Redis;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Backend_RC.DTO;
 
 namespace Backend_RC.Controllers;
 [Route("api/[controller]")]
@@ -163,6 +166,64 @@ public class AuthController : ControllerBase
         }).ToListAsync();
 
         return Ok(users);
+    }
+
+
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> DeleteUser(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+            return NotFound("пользователь не найден");
+
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            return BadRequest(new { message = "Не удалось удалить пользователя", errors });
+        }
+
+        return Ok(new { message = "Пользователь успешно удалён." });
+    }
+
+    /// <summary>
+    /// Смена пароля для Авторизованного пользователя
+    /// </summary>
+    /// <param name="model">Модель для смены пароля</param>
+    /// <returns></returns>
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
+    {
+        if(!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        if(string.IsNullOrEmpty(email))
+            return Unauthorized("Пользователь не авторизован");
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+            return NotFound("Пользователь не найден");
+
+        if(model.NewPassword != model.ConfirmPassword)
+            return BadRequest("Новый пароль и подтверждение не совпадают.");
+
+        var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(_ => _.Description));
+            return BadRequest(new
+            {
+                message = "Ошибка при смене пароля",
+                errors
+            });
+        }
+
+        return Ok(new
+        {
+            message = "Пароль успешно сменён"
+        });
     }
 
     private string GenerateJwtToken(User user)
