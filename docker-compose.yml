@@ -1,0 +1,46 @@
+﻿version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: backend_rc
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=citycarddb;Username=schoolxadmin;Password=27SchoolCityEdge513222;
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - Redis__Password=27SchoolCityEdge513222
+    restart: always
+  
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: citycarddb
+      POSTGRES_USER: schoolxadmin
+      POSTGRES_PASSWORD: 27SchoolCityEdge513222
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    restart: always
+    command: redis-server --requirepass 27SchoolCityEdge513222
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  pg_data:
+  redis_data:
