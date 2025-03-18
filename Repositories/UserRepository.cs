@@ -6,6 +6,7 @@ namespace Backend_RC.Repositories;
 public interface IUserRepository
 {
     Task<User?> GetUserByIdAsync(string userId);
+    Task<User?> GetUserWithBonusPointsByIdAsync(string userId);
     Task UpdateUserAsync(User user);
 }
 
@@ -43,5 +44,14 @@ public class UserRepository : IUserRepository
     {
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<User?> GetUserWithBonusPointsByIdAsync(string userId)
+    {
+        return await _context.Users
+            .Include(u => u.VirtualCard)
+            .Include(u => u.IndicatedCard)
+            .Include(u => u.BonusPoints)
+            .FirstOrDefaultAsync(u => u.Id == userId);
     }
 }

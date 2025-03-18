@@ -10,7 +10,7 @@ public class BonusPointModel
     public string UserId { get; set; }
 
     [Required]
-    public int Points { get; set; } =0;
+    public int Points { get; set; } =500;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

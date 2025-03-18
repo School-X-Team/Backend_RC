@@ -4,6 +4,9 @@ using System.Text;
 using Backend_RC.Models;
 using Backend_RC.Repositories;
 using Backend_RC.Services;
+using Elastic.Ingest.Elasticsearch.DataStreams;
+using Elastic.Serilog.Sinks;
+using Elastic.Transport;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,10 +15,53 @@ using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
+using Serilog.Exceptions;
 using StackExchange.Redis;
 
+//var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+//var configuration = new ConfigurationBuilder()
+//    .SetBasePath(Directory.GetCurrentDirectory())
+//    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+//    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
+//    .AddEnvironmentVariables()
+//    .Build();
+
+////Получаем настройки для Elasticsearch из конфигурации
+//var elasticUri = configuration["Elasticsearch:Uri"] ?? "http://elasticsearch:9200";
+//var indexFormat = configuration["Elasticsearch:IndexFormat"] ?? $"rostov-card-logs-{DateTime.UtcNow:yyyy.MM.dd}";
+//var durablePath = configuration["Elasticsearch:DurablePath"] ?? "logs/durable-logs";
+
+////Настраиваем Serilog с обогащением и Durable Elasticsearch sink
+//Log.Logger = new LoggerConfiguration()
+//    .ReadFrom.Configuration(configuration)
+//    .Enrich.FromLogContext()
+//    .Enrich.WithMachineName()
+//    .Enrich.WithEnvironmentUserName()
+//    .Enrich.WithExceptionDetails()//логирование стектрейсов и данных исключений
+//    .Enrich.WithProcessId()
+//    .Enrich.WithThreadId()
+//    .Enrich.WithProperty("ServiceName", "rostov-card-api")
+//    .Enrich.WithProperty("Environment", environment)
+//    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+//    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+//    .MinimumLevel.Information()
+//    .WriteTo.Console()
+//    .WriteTo.Elasticsearch([new Uri(elasticUri)], opts =>
+//    {
+//        opts.DataStream = new DataStreamName("logs", "console-example", "demo");
+//        opts.BootstrapMethod = Elastic.Ingest.Elasticsearch.BootstrapMethod.Failure;
+//        opts.ConfigureChannel = channelOpts =>
+//        {
+//            channelOpts
+//        }
+//        opts.
+//    })
+
+
 var builder = WebApplication.CreateBuilder(args);
-var jwtSettings = builder.Configuration.GetSection("Jwt");
+var jwtSettings = builder.Configuration.GetSection("JWT");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
 //настройка redis
@@ -80,6 +126,8 @@ builder.Services.AddScoped<IVCardRepository, VCardRepository>();
 builder.Services.AddScoped<IVCardService, VCardService>();
 builder.Services.AddScoped<IIndicatedCardRepository, IndicatedCardRepository>();
 builder.Services.AddScoped<IIndicatedCardService, IndicatedCardService>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -116,6 +164,12 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();  // Автоматическое применение миграций
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();
