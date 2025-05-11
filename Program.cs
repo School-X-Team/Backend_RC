@@ -128,6 +128,9 @@ builder.Services.AddScoped<IIndicatedCardRepository, IndicatedCardRepository>();
 builder.Services.AddScoped<IIndicatedCardService, IndicatedCardService>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<TaskRepository>();
+builder.Services.AddScoped<TaskService>();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

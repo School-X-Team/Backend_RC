@@ -1,6 +1,11 @@
-﻿using Backend_RC.Models;
+﻿using System.Globalization;
+using System.Reflection.Emit;
+using System.Text.Json;
+using Backend_RC.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+
+
 
 public class ApplicationDbContext : IdentityDbContext<User>
 {
@@ -19,10 +24,23 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<StoreItemModel> Store { get; set; }
     public DbSet<NotificationModel> Notifications { get; set; }
     public DbSet<UserSettingModel> UserSettings { get; set; }
+    public DbSet<TaskItem> Tasks { get; set; }
+    public DbSet<Backend_RC.Models.Routee> Routes { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<Routee>(builder =>
+        {
+            // Указываем тип столбца в Postgres
+            builder.Property(r => r.StartCoordinates)
+                   .HasColumnType("double precision[]");
+
+            builder.Property(r => r.EndCoordinates)
+                   .HasColumnType("double precision[]");
+        });
 
         // Связь один к одному: Пользователь -> Виртуальная карта
         builder.Entity<User>()
