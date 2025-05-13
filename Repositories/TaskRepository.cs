@@ -1,10 +1,20 @@
 ﻿using Backend_RC.DTO;
 using Backend_RC.Models;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend_RC.Repositories;
 
-public class TaskRepository
+public interface ITaskRepository
+{
+    Task<List<TaskItem>> GetAllAsync();
+    Task<TaskItem?> GetByIdAsync(int id);
+    Task AddAsync(TaskItem task);
+    Task UpdateAsync(TaskItem task);
+    Task DeleteAsync(int id);
+}
+
+public class TaskRepository : ITaskRepository
 {
     private readonly ApplicationDbContext _context;
 
@@ -13,77 +23,32 @@ public class TaskRepository
         _context = context;
     }
 
-    public async Task<List<TaskDto>> GetAllAsync()
+    public async Task<List<TaskItem>> GetAllAsync() => 
+        await _context.Tasks.ToListAsync();
+
+    public async Task<TaskItem?> GetByIdAsync(int id) => 
+        await _context.Tasks.FindAsync(id);
+
+    public async Task AddAsync(TaskItem task)
     {
-        return await _context.Tasks
-            .Select(t => new TaskDto
-            {
-                Id = t.Id,
-                Title = t.Title,
-                Icon = t.Icon,
-                TaskPointStart = t.TaskPointStart,
-                TaskPointEnd = t.TaskPointEnd,
-                Image = t.Image
-            }).ToListAsync();
+        await _context.Tasks.AddAsync(task);
+        await _context.SaveChangesAsync();
     }
 
-    public async Task<TaskDto?> GetByIdAsync(int id)
+    public async Task UpdateAsync(TaskItem task)
     {
-        var entity = await _context.Tasks.FindAsync(id);
-        if (entity == null) return null;
+        _context.Tasks.Update(task);
+        await _context.SaveChangesAsync();
+    }
 
-        return new TaskDto
+    public async Task DeleteAsync(int id)
+    {
+        var task = await GetByIdAsync(id);
+        if (task != null)
         {
-            Id = entity.Id,
-            Title = entity.Title,
-            Icon = entity.Icon,
-            TaskPointStart = entity.TaskPointStart,
-            TaskPointEnd = entity.TaskPointEnd,
-            Image = entity.Image
-        };
-    }
-
-    public async Task<TaskDto> CreateAsync(TaskDto dto)
-    {
-        var entity = new TaskItem
-        {
-            Title = dto.Title,
-            Icon = dto.Icon,
-            TaskPointStart = dto.TaskPointStart,
-            TaskPointEnd = dto.TaskPointEnd,
-            Image = dto.Image
-        };
-
-        _context.Tasks.Add(entity);
-        await _context.SaveChangesAsync();
-
-        dto.Id = entity.Id;
-        return dto;
-    }
-
-    public async Task<bool> UpdateAsync(int id, TaskDto dto)
-    {
-        var entity = await _context.Tasks.FindAsync(id);
-        if (entity == null) return false;
-
-        entity.Title = dto.Title;
-        entity.Icon = dto.Icon;
-        entity.TaskPointStart = dto.TaskPointStart;
-        entity.TaskPointEnd = dto.TaskPointEnd;
-        entity.Image = dto.Image;
-
-        await _context.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<bool> DeleteAsync(int id)
-    {
-        var entity = await _context.Tasks.FindAsync(id);
-        if (entity == null) return false;
-
-        _context.Tasks.Remove(entity);
-        await _context.SaveChangesAsync();
-        return true;
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
+        }
     }
 }
 

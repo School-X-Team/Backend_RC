@@ -6,59 +6,74 @@ namespace Backend_RC.DTO;
 /// </summary>
 public class EventDto
 {
-    /// <summary>
-    /// Идентификатор события
-    /// </summary>
-    [Required]
+     [Key]
     public int Id { get; set; }
 
     /// <summary>
-    /// Название события
+    /// Тип события (например, выставка, концерт)
     /// </summary>
     [Required]
-    [StringLength(100, MinimumLength = 5, ErrorMessage = "Название должно содержать от 5 до 100 символов.")]
+    public string Type { get; set; }
+
+    /// <summary>
+    /// Название мероприятия
+    /// </summary>
+    [Required]
     public string Title { get; set; }
 
     /// <summary>
-    /// Подзаголовок или краткое описание
-    /// </summary>
-    [StringLength(200, ErrorMessage = "Подзаголовок не может превышать 200 символов.")]
-    public string? Subtitle { get; set; }
-
-    /// <summary>
-    /// Дата проведения события
+    /// Дата начала мероприятия (например, 15 апреля)
     /// </summary>
     [Required]
-    public DateTime Date { get; set; }
+    public string DateStart { get; set; }
 
     /// <summary>
-    /// Время проведения события (формат HH:mm)
+    /// Дата окончания мероприятия (например, 16 апреля)
     /// </summary>
     [Required]
-    [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", ErrorMessage = "Время должно быть в формате HH:mm")]
-    public string Time { get; set; }
+    public string DateEnd { get; set; }
 
     /// <summary>
-    /// Жанр события (например, джаз, классика)
+    /// Время начала (например, 10:00)
     /// </summary>
     [Required]
-    public string Genre { get; set; }
+    public string TimeStart { get; set; }
 
     /// <summary>
-    /// Возрастное ограничение (например, 6+)
+    /// Время окончания (например, 11:05)
     /// </summary>
     [Required]
-    public string AgeRating { get; set; }
+    public string TimeEnd { get; set; }
 
     /// <summary>
-    /// URL изображения для афиши
+    /// Длительность мероприятия (например, "1 ч 5 мин")
+    /// </summary>
+    public string TakeTime { get; set; }
+
+    /// <summary>
+    /// Вознаграждение за посещение (например, 4 балла)
+    /// </summary>
+    public string Reward { get; set; }
+
+    /// <summary>
+    /// Стоимость билета
+    /// </summary>
+    public string Price { get; set; }
+
+    /// <summary>
+    /// Ссылка на изображение
     /// </summary>
     [Required]
-    [Url(ErrorMessage = "Некорректный URL-адрес изображения.")]
-    public string ImageUrl { get; set; }
+    public string Image { get; set; }
 
     /// <summary>
-    /// Дополнительная информация (например, особенности или описание)
+    /// Описание мероприятия
     /// </summary>
-    public string? AdditionalInfo { get; set; }
+    public string Description { get; set; }
+
+    /// <summary>
+    /// Географические координаты [широта, долгота]
+    /// </summary>
+    public double[] StartCoordinates { get; set; }
+    public double[] EndCoordinates { get; set; }
 }

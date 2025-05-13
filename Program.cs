@@ -128,8 +128,12 @@ builder.Services.AddScoped<IIndicatedCardRepository, IndicatedCardRepository>();
 builder.Services.AddScoped<IIndicatedCardService, IndicatedCardService>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<TaskRepository>();
+builder.Services.AddScoped<ITaskRepository,TaskRepository>();
 builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<IRouteRepository,RouteRepository>();
+builder.Services.AddScoped<RouteService>();
+builder.Services.AddScoped<ITicketsRepository,TicketsRepository>();
+builder.Services.AddScoped<TicketsService>();
 
 
 builder.Services.AddControllers();

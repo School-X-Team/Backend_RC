@@ -2,45 +2,80 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend_RC.Models;
+
 /// <summary>
-/// модель события (концерт, спектакль и т. д.) для афиши.
+/// Модель события (выставка, концерт и т. д.).
 /// </summary>
 public class EventModel
 {
+    [Key]
     public int Id { get; set; }
+
+    /// <summary>
+    /// Тип события (например, выставка, концерт)
+    /// </summary>
+    [Required]
+    public string Type { get; set; }
 
     /// <summary>
     /// Название мероприятия
     /// </summary>
+    [Required]
     public string Title { get; set; }
-    /// <summary>
-    /// Подзаголовок или краткое описание
-    /// </summary>
-    public string? Subtitle { get; set; }
-    /// <summary>
-    /// Дата проведения (например, 3 июня)
-    /// </summary>
-    public DateTime Date{ get; set; }
-    /// <summary>
-    /// Время проведения (например, 19:00)
-    /// </summary>
-    public string Time { get; set; }
-    /// <summary>
-    /// Жанр (например, джаз, классика)
-    /// </summary>
-    public string Genre { get; set; }
-    /// <summary>
-    /// Возрастное ограничение (например, 6+).
-    /// </summary>
-    public string AgeRating { get; set; }
-    /// <summary>
-    /// URL-адрес изображения для афиши.
-    /// </summary>
-    public string ImageUrl { get; set; }
-    /// <summary>
-    /// Дополнительный текст (например, «Посвящение Фрэнку Синатре»).
-    /// </summary>
-    public string? AdditionalInfo { get; set; }
 
-    public ICollection<TicketModel> Tickets { get; set; }
+    /// <summary>
+    /// Дата начала мероприятия (например, 15 апреля)
+    /// </summary>
+    [Required]
+    public string DateStart { get; set; }
+
+    /// <summary>
+    /// Дата окончания мероприятия (например, 16 апреля)
+    /// </summary>
+    [Required]
+    public string DateEnd { get; set; }
+
+    /// <summary>
+    /// Время начала (например, 10:00)
+    /// </summary>
+    [Required]
+    public string TimeStart { get; set; }
+
+    /// <summary>
+    /// Время окончания (например, 11:05)
+    /// </summary>
+    [Required]
+    public string TimeEnd { get; set; }
+
+    /// <summary>
+    /// Длительность мероприятия (например, "1 ч 5 мин")
+    /// </summary>
+    public string TakeTime { get; set; }
+
+    /// <summary>
+    /// Вознаграждение за посещение (например, 4 балла)
+    /// </summary>
+    public string Reward { get; set; }
+
+    /// <summary>
+    /// Стоимость билета
+    /// </summary>
+    public string Price { get; set; }
+
+    /// <summary>
+    /// Ссылка на изображение
+    /// </summary>
+    [Required]
+    public string Image { get; set; }
+
+    /// <summary>
+    /// Описание мероприятия
+    /// </summary>
+    public string Description { get; set; }
+
+    /// <summary>
+    /// Географические координаты [широта, долгота]
+    /// </summary>
+    public double[] StartCoordinates { get; set; }
+    public double[] EndCoordinates { get; set; }
 }

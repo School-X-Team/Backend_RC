@@ -56,13 +56,18 @@ public class EventController : ControllerBase
         var eventModel = new EventModel
         {
             Title = dto.Title,
-            Subtitle = dto.Subtitle,
-            Date = dto.Date,
-            Time = dto.Time,
-            Genre = dto.Genre,
-            AgeRating = dto.AgeRating,
-            ImageUrl = dto.ImageUrl,
-            AdditionalInfo = dto.AdditionalInfo
+            Type = dto.Type,
+            DateStart = dto.DateStart,
+            DateEnd = dto.DateEnd,
+            TimeStart = dto.TimeStart,
+            TimeEnd = dto.TimeEnd,
+            TakeTime = dto.TakeTime,
+            Reward = dto.Reward,
+            Price = dto.Price,
+            Image = dto.Image,
+            Description = dto.Description,
+            StartCoordinates = dto.StartCoordinates,
+            EndCoordinates = dto.EndCoordinates
         };
 
         var newEvent = await _eventService.CreateEventAsync(eventModel);
@@ -87,13 +92,18 @@ public class EventController : ControllerBase
 
         // Обновляем поля (можно добавить маппинг)
         existing.Title = model.Title;
-        existing.Subtitle = model.Subtitle;
-        existing.Date = model.Date;
-        existing.Time = model.Time;
-        existing.Genre = model.Genre;
-        existing.AgeRating = model.AgeRating;
-        existing.ImageUrl = model.ImageUrl;
-        existing.AdditionalInfo = model.AdditionalInfo;
+        existing.Type = model.Type;
+        existing.DateStart = model.DateStart;
+        existing.DateEnd = model.DateEnd;
+        existing.TimeStart = model.TimeStart;
+        existing.TimeEnd = model.TimeEnd;
+        existing.TakeTime = model.TakeTime;
+        existing.Reward = model.Reward;
+        existing.Price = model.Price;
+        existing.Image = model.Image;
+        existing.Description = model.Description;
+        existing.StartCoordinates = model.StartCoordinates;
+        existing.EndCoordinates = model.EndCoordinates;
 
         await _eventService.UpdateEventAsync(existing);
         return Ok(existing);

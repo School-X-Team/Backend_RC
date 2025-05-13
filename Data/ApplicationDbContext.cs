@@ -2,19 +2,19 @@
 using System.Reflection.Emit;
 using System.Text.Json;
 using Backend_RC.Models;
+using Elastic.CommonSchema;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 
 
-public class ApplicationDbContext : IdentityDbContext<User>
+public class ApplicationDbContext : IdentityDbContext<Backend_RC.Models.User>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
     public DbSet<VCardModel> VCards { get; set; }
     public DbSet<IndicatedCardModel> IndicatedCards { get; set; }
     public DbSet<EventModel> Events { get; set; }
-    public DbSet<TicketModel> Tickets { get; set; }
     public DbSet<CulturalRoute> CulturalRoutes { get; set; }
     public DbSet<BonusPointModel> BonusPoints { get; set; }
     public DbSet<BannerModel> Banners { get; set; }
@@ -26,11 +26,30 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<UserSettingModel> UserSettings { get; set; }
     public DbSet<TaskItem> Tasks { get; set; }
     public DbSet<Backend_RC.Models.Routee> Routes { get; set; }
-
+    public DbSet<Tickets> Tickets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<EventModel>(builder =>
+        {
+            // Указываем тип столбца в Postgres
+            builder.Property(r => r.StartCoordinates)
+                   .HasColumnType("double precision[]");
+
+            builder.Property(r => r.EndCoordinates)
+                   .HasColumnType("double precision[]");
+        });
+
+        builder.Entity<TaskItem>(builder =>
+        {
+            // Указываем тип столбца в Postgres
+            builder.Property(r => r.StartCoordinates)
+                   .HasColumnType("double precision[]");
+
+            builder.Property(r => r.EndCoordinates)
+                   .HasColumnType("double precision[]");
+        });
 
         builder.Entity<Routee>(builder =>
         {
@@ -43,32 +62,19 @@ public class ApplicationDbContext : IdentityDbContext<User>
         });
 
         // Связь один к одному: Пользователь -> Виртуальная карта
-        builder.Entity<User>()
+        builder.Entity<Backend_RC.Models.User>()
             .HasOne(u => u.VirtualCard)
             .WithOne(vc => vc.User)
             .HasForeignKey<VCardModel>(vc => vc.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Связь один к одному: Пользователь -> Указанная карта
-        builder.Entity<User>()
+        builder.Entity<Backend_RC.Models.User>()
             .HasOne(u => u.IndicatedCard)
             .WithOne(ic => ic.User)
             .HasForeignKey<IndicatedCardModel>(ic => ic.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Связь один ко многим: Пользователь -> Билеты
-        builder.Entity<TicketModel>()
-            .HasOne(t => t.User)
-            .WithMany(u => u.Tickets)
-            .HasForeignKey(t => t.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Связь один ко многим: Событие -> Билеты
-        builder.Entity<TicketModel>()
-            .HasOne(t => t.Event)
-            .WithMany(e => e.Tickets)
-            .HasForeignKey(t => t.EventId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         // Связь один ко многим: Пользователь -> Бонусные баллы
         builder.Entity<BonusPointModel>()
